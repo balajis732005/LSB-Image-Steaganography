@@ -12,6 +12,7 @@ int main(){
 
         EncodeResult *encodeResult = (EncodeResult *)malloc(sizeof(EncodeResult));
         encodeResult = performEncode(encodeInputData);
+        
         if(encodeResult->encodeStatus == ENCODE_SUCCESS){
             printf("\nENCODE SUCCESS!\n");
             printf("%s", encodeResult->encodeResultMessage);
@@ -19,7 +20,7 @@ int main(){
             printf("\nENCODE FAILURE!\n");
             printf("%s", encodeResult->encodeResultMessage);
         }
-    } 
+    }
     else if(operationType == 'D') {
         // Decode
     } 
