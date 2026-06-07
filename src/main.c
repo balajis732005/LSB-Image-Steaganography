@@ -9,9 +9,21 @@ int main(){
         // Encode
         EncodeInputData *encodeInputData = (EncodeInputData *)malloc(sizeof(EncodeInputData));
         getInputForEncode(encodeInputData);
-    } else if(operationType == 'D') {
+
+        EncodeResult *encodeResult = (EncodeResult *)malloc(sizeof(EncodeResult));
+        encodeResult = performEncode(encodeInputData);
+        if(encodeResult->encodeStatus == ENCODE_SUCCESS){
+            printf("\nENCODE SUCCESS!\n");
+            printf("%s", encodeResult->encodeResultMessage);
+        } else if(encodeResult->encodeStatus == ENCODE_FAILURE) {
+            printf("\nENCODE FAILURE!\n");
+            printf("%s", encodeResult->encodeResultMessage);
+        }
+    } 
+    else if(operationType == 'D') {
         // Decode
-    } else {
+    } 
+    else {
         printf("\nEnter Valid option!\n");
     }
 
