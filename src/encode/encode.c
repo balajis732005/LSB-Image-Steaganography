@@ -14,6 +14,13 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
         return encodeResult;
     }
 
+    printf("\nMagic String: %s", inputMessageData->magicString);
+    printf("\nFile Name Length: %d", inputMessageData->messageFileNameLength);
+    printf("\nFile Name: %s", inputMessageData->messageFileName);
+    printf("\nFile Extension length: %d", inputMessageData->messageFileExtensionLength);
+    printf("\nFile Extension : %s", inputMessageData->messageFileExtension);
+    printf("\nFile Size : %ld\n", inputMessageData->messageFileSize);
+
     encodeResult->encodeStatus = ENCODE_SUCCESS;
     encodeResult->encodeResultMessage = NULL;
     return encodeResult;
@@ -41,10 +48,14 @@ Status getInputMessageData(char *inputMessageFilePath, InputMessageData *inputMe
         fileName = backSlash + 1;
     }
 
-    inputMessageData->messageFileName = (char *)malloc(sizeof(fileName));
-    inputMessageData->messageFileName = fileName;
+    char *dot = strrchr(fileName, '.');
 
-    inputMessageData->messageFileNameLength = strlen(fileName);
+    size_t fileNameLength = dot - fileName;
+
+    inputMessageData->messageFileName = (char *)malloc(fileNameLength + 1);
+    memcpy(inputMessageData->messageFileName, fileName, fileNameLength);
+
+    inputMessageData->messageFileNameLength = (int)fileNameLength;
 
     // Input File Extension
 

@@ -1,9 +1,11 @@
 #include "main.h"
 
 int main(){
-    char operationType = NULL;
+    char operationType;
     displayOperationMenu();
     scanf(" %c", &operationType);
+
+    operationType = toupper(operationType);
 
     if(operationType == 'E'){
         // Encode
@@ -12,13 +14,12 @@ int main(){
 
         EncodeResult *encodeResult = (EncodeResult *)malloc(sizeof(EncodeResult));
         encodeResult = performEncode(encodeInputData);
-        
+
         if(encodeResult->encodeStatus == ENCODE_SUCCESS){
             printf("\nENCODE SUCCESS!\n");
-            printf("%s", encodeResult->encodeResultMessage);
         } else if(encodeResult->encodeStatus == ENCODE_FAILURE) {
             printf("\nENCODE FAILURE!\n");
-            printf("%s", encodeResult->encodeResultMessage);
+            printf("%s\n", encodeResult->encodeResultMessage);
         }
     }
     else if(operationType == 'D') {
