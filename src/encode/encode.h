@@ -27,5 +27,9 @@ typedef struct _ImageData{
 
 StatusResult *getInputMessageData(char *, InputMessageData *);
 StatusResult *getImageData(char *, ImageData *);
+void encode32Bits(FILE *, int *, int *);
+void encodeCustomBits(FILE *, int *, int, char *);
+void encodeInputFileDetails(char *, InputMessageData *, int *);
+void encodeInputFileContent(char *, char *, int *);
 
 #endif

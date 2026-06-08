@@ -55,6 +55,9 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
         return encodeResult;
     }
 
+    int currentByteForEncode = imageData->pixelStartByte;
+
+
     encodeResult->encodeStatus = ENCODE_SUCCESS;
     encodeResult->encodeResultMessage = NULL;
     return encodeResult;
@@ -245,4 +248,47 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
 
     statusResult->status = SUCCESS;
     return statusResult;
+}
+
+void encode32Bits(FILE *imageFilePtr, int *startByte, int *dataToEncode){
+
+    unsigned char currentByte;
+
+    for(int b = 31; b >= 0; b--){
+        unsigned char encodeBit = (*dataToEncode >> b) & 1;
+
+        fread(&currentByte, 1, 1, imageFilePtr);
+
+        currentByte = (currentByte & 0xFE) | encodeBit;
+
+        fseek(imageFilePtr, -1, SEEK_CUR);
+
+        fwrite(&currentByte, 1, 1, imageFilePtr);
+
+        (*startByte)++;
+    }
+}
+
+void encodeCustomBits(FILE *imageFilePtr, int *startByte, int noOfBitsToEncode,char *dataToEncode){
+
+    unsigned char currentByte;
+
+    for(int b = noOfBitsToEncode - 1; b >= 0; b--){
+        unsigned char encodeBit = (*dataToEncode >> b) & 1;
+
+        fread(&currentByte, 1, 1, imageFilePtr);
+
+        currentByte = (currentByte & 0xFE) | encodeBit;
+
+        fseek(imageFilePtr, -1, SEEK_CUR);
+
+        fwrite(&currentByte, 1, 1, imageFilePtr);
+
+        (*startByte)++;
+    }
+
+}
+
+void encodeInputFileDetails(char *imageFilePath, InputMessageData *inputMessageData){
+    FILE *imageFilePtr = fopen(imageFilePath, "rb+");
 }
