@@ -1,7 +1,7 @@
 #include "encode.h"
 
-EncodeResult* performEncode(EncodeInputData *encodeInputData){
-    EncodeResult *encodeResult = (EncodeResult *)malloc(sizeof(EncodeResult));
+StatusResult* performEncode(EncodeInputData *encodeInputData){
+    StatusResult *encodeResult = (StatusResult *)malloc(sizeof(StatusResult));
     InputMessageData *inputMessageData = (InputMessageData *)malloc(sizeof(InputMessageData));
     ImageData *imageData = (ImageData *)malloc(sizeof(ImageData));
 
@@ -9,9 +9,9 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
     inputDataExtractionStatus = getInputMessageData(encodeInputData->inputMessageFilePath, inputMessageData);
 
     if(inputDataExtractionStatus->status == FAILURE){
-        encodeResult->encodeStatus = ENCODE_FAILURE;
-        encodeResult->encodeResultMessage = (char *)malloc(51);
-        encodeResult->encodeResultMessage = inputDataExtractionStatus->statusMessage;
+        encodeResult->status = FAILURE;
+        encodeResult->statusMessage = (char *)malloc(51);
+        encodeResult->statusMessage = inputDataExtractionStatus->statusMessage;
         return encodeResult;
     }
 
@@ -25,9 +25,9 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
     imageDataExtractionStatus = getImageData(encodeInputData->imageFilePath, imageData);
     
     if(imageDataExtractionStatus->status == FAILURE){
-        encodeResult->encodeStatus = ENCODE_FAILURE;
-        encodeResult->encodeResultMessage = (char *)malloc(51);
-        encodeResult->encodeResultMessage = imageDataExtractionStatus->statusMessage;
+        encodeResult->status = FAILURE;
+        encodeResult->statusMessage = (char *)malloc(51);
+        encodeResult->statusMessage = inputDataExtractionStatus->statusMessage;
         return encodeResult;
     }
 
@@ -50,9 +50,9 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
     printf("%ld\n", bytesNeededToEncode);
 
     if(bytesNeededToEncode > noOfBytesInImage){
-        encodeResult->encodeStatus = ENCODE_FAILURE;
-        encodeResult->encodeResultMessage = (char *)malloc(51);
-        encodeResult->encodeResultMessage = "[ERROR] BMP File Capacity is not sufficient to encode input data!";
+        encodeResult->status = FAILURE;
+        encodeResult->statusMessage = (char *)malloc(51);
+        encodeResult->statusMessage = "[ERROR] BMP File Capacity is not sufficient to encode input data!";
         return encodeResult;
     }
 
@@ -85,8 +85,8 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
 
     printf("%d\n", currentByteForEncode);
 
-    encodeResult->encodeStatus = ENCODE_SUCCESS;
-    encodeResult->encodeResultMessage = NULL;
+    encodeResult->status = SUCCESS;
+    encodeResult->statusMessage = NULL;
     return encodeResult;
 }
 

@@ -7,16 +7,6 @@ typedef struct _EncodeInputData{
 } EncodeInputData;
 
 typedef enum{
-    ENCODE_SUCCESS,
-    ENCODE_FAILURE
-} EncodeStatus;
-
-typedef struct _EncodeResult{
-    EncodeStatus encodeStatus;
-    char *encodeResultMessage;
-} EncodeResult;
-
-typedef enum{
     SUCCESS,
     FAILURE
 } Status;

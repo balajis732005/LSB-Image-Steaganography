@@ -8,6 +8,7 @@
 
 void displayOperationMenu();
 void getInputForEncode(EncodeInputData *);
-EncodeResult* performEncode(EncodeInputData *);
+StatusResult *performEncode(EncodeInputData *);
+StatusResult *performDecode(char *);
 
 #endif

@@ -12,18 +12,30 @@ int main(){
         EncodeInputData *encodeInputData = (EncodeInputData *)malloc(sizeof(EncodeInputData));
         getInputForEncode(encodeInputData);
 
-        EncodeResult *encodeResult = (EncodeResult *)malloc(sizeof(EncodeResult));
+        StatusResult *encodeResult = (StatusResult *)malloc(sizeof(StatusResult));
         encodeResult = performEncode(encodeInputData);
 
-        if(encodeResult->encodeStatus == ENCODE_SUCCESS){
+        if(encodeResult->status == SUCCESS){
             printf("\nENCODE SUCCESS!\n");
-        } else if(encodeResult->encodeStatus == ENCODE_FAILURE) {
+        } else if(encodeResult->status == FAILURE) {
             printf("\nENCODE FAILURE!\n");
-            printf("%s\n", encodeResult->encodeResultMessage);
+            printf("%s\n", encodeResult->statusMessage);
         }
     }
     else if(operationType == 'D') {
-        // Decode
+        char *inputEncodedImageFilePath = (char *)malloc(101);
+        printf("Enter Encoded Image File Path: ");
+        scanf(" %100[^\n]", inputEncodedImageFilePath);
+        
+        StatusResult *decodeResult = (StatusResult *)malloc(sizeof(StatusResult));
+        decodeResult = performDecode(inputEncodedImageFilePath);
+
+        if(decodeResult->status == SUCCESS){
+            printf("\nDECODE SUCCESS!\n");
+        } else if(decodeResult->status == FAILURE) {
+            printf("\nDECODE FAILURE!\n");
+            printf("%s\n", decodeResult->statusMessage);
+        }
     } 
     else {
         printf("\nEnter Valid option!\n");
