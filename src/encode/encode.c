@@ -31,13 +31,29 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
         return encodeResult;
     }
 
-    printf("FN : %s\n", imageData->imageFileName);
-    printf("SIZE : %ld\n", imageData->imageFileSize);
-    printf("PStart: %d\n", imageData->pixelStartByte);
-    printf("HINFOSIZE : %d\n", imageData->imageFileHeaderInfoSize);
-    printf("W : %d\n", imageData->bitmapWidth);
-    printf("H : %d\n", imageData->bitmapHeight);
-    printf("BPerPix : %d\n", imageData->bitsPerPixel);
+    // printf("FN : %s\n", imageData->imageFileName);
+    // printf("SIZE : %ld\n", imageData->imageFileSize);
+    // printf("PStart: %d\n", imageData->pixelStartByte);
+    // printf("HINFOSIZE : %d\n", imageData->imageFileHeaderInfoSize);
+    // printf("W : %d\n", imageData->bitmapWidth);
+    // printf("H : %d\n", imageData->bitmapHeight);
+    // printf("BPerPix : %d\n", imageData->bitsPerPixel);
+
+    long int bytesNeededToEncode = 24 + 
+                              32 + (inputMessageData->messageFileNameLength * 8) + 
+                              32 + (inputMessageData->messageFileExtensionLength * 8) + 
+                              32 + (inputMessageData->messageFileSize * 8);
+    
+    long int noOfBytesInImage = (imageData->bitmapWidth) * (imageData->bitmapHeight) * 3;
+
+    //printf("%ld - %ld\n", bytesNeededToEncode, noOfBytesInImage);
+
+    if(bytesNeededToEncode > noOfBytesInImage){
+        encodeResult->encodeStatus = ENCODE_FAILURE;
+        encodeResult->encodeResultMessage = (char *)malloc(51);
+        encodeResult->encodeResultMessage = "[ERROR] BMP File Capacity is not sufficient to encode input data!";
+        return encodeResult;
+    }
 
     encodeResult->encodeStatus = ENCODE_SUCCESS;
     encodeResult->encodeResultMessage = NULL;

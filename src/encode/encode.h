@@ -12,7 +12,7 @@ typedef struct _InputMessageData{
     char *messageFileName;
     int messageFileExtensionLength;
     char *messageFileExtension;
-    long int messageFileSize;
+    int messageFileSize;
 } InputMessageData;
 
 typedef struct _ImageData{
