@@ -7,15 +7,23 @@ CFLAGS = -Wall -I./src
 # All source files
 SRC = $(shell find src -name "*.c")
 
-# Output executable
+# Object files
+OBJ = $(SRC:.c=.o)
+
+# Executable
 TARGET = lsbImageSteaganography.out
 
-# Build and run target
-run:
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
-	@echo "Build complete -> $(TARGET)"
+# Default target
+all: $(TARGET)
+
+# Link
+$(TARGET): $(OBJ)
+	$(CC) $(OBJ) -o $(TARGET)
+
+# Compile each .c into .o
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean
 clean:
-	rm -f $(TARGET)
-	@echo "Clean complete"
+	rm -f $(OBJ) $(TARGET)

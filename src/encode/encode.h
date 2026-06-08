@@ -31,6 +31,6 @@ StatusResult *copyImageFile(char *, char *);
 void encodeIntegralData(FILE *, int, const int);
 void encodeStringData(FILE *, int, const char *);
 void encodeInputFileDetails(char *, InputMessageData *, int *);
-void encodeInputFileContent(char *, char *, int *);
+void encodeInputFileContent(int, char *,char *, int *);
 
 #endif

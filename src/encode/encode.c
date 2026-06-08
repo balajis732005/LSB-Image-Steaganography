@@ -39,7 +39,8 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
     // printf("H : %d\n", imageData->bitmapHeight);
     // printf("BPerPix : %d\n", imageData->bitsPerPixel);
 
-    long int bytesNeededToEncode = 24 + 
+    long int bytesNeededToEncode = 
+                              (strlen(MAGIC_STRING) * 8) + 
                               32 + (inputMessageData->messageFileNameLength * 8) + 
                               32 + (inputMessageData->messageFileExtensionLength * 8) + 
                               32 + (inputMessageData->messageFileSize * 8);
@@ -73,6 +74,16 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
     printf("%d\n", currentByteForEncode);
 
     encodeInputFileDetails(encodedImageFilePath, inputMessageData, &currentByteForEncode);
+
+    printf("STARTED ENCODING DATA\n");
+    encodeInputFileContent(
+        inputMessageData->messageFileSize, 
+        encodeInputData->inputMessageFilePath, 
+        encodedImageFilePath, 
+        &currentByteForEncode
+    );
+
+    printf("%d\n", currentByteForEncode);
 
     encodeResult->encodeStatus = ENCODE_SUCCESS;
     encodeResult->encodeResultMessage = NULL;
@@ -371,4 +382,39 @@ void encodeInputFileDetails(char *outputImageFilePath, InputMessageData *inputMe
     // Encode Input File Extension
     encodeStringData(outputImageFilePtr, *byteToEncode, inputMessageData->messageFileExtension);
     (*byteToEncode) += (inputMessageData->messageFileExtensionLength * 8);
+
+    fclose(outputImageFilePtr);
+}
+
+void encodeInputFileContent(int inputMessageFileSize, char *inputMessageFilePath,char *outputImageFilePath, int *byteToEncode){
+    FILE *inputMessageFilePtr = fopen(inputMessageFilePath, "rb");
+    FILE *outputImageFilePtr = fopen(outputImageFilePath, "rb+");
+
+    encodeIntegralData(outputImageFilePtr, *byteToEncode, inputMessageFileSize);
+    (*byteToEncode) += 32;
+
+    unsigned char currentChar;
+
+    while(fread(&currentChar, 1, 1, inputMessageFilePtr) == 1){
+        unsigned char currentByte;
+
+        fseek(outputImageFilePtr, *byteToEncode, SEEK_SET);
+
+        for(int b = 7; b >= 0; b--){
+            unsigned char encodeBit = (currentChar >> b) & 1;
+
+            fread(&currentByte, 1, 1, outputImageFilePtr);
+
+            currentByte = (currentByte & 0xFE) | encodeBit;
+
+            fseek(outputImageFilePtr, -1, SEEK_CUR);
+
+            fwrite(&currentByte, 1, 1, outputImageFilePtr);
+
+            (*byteToEncode)++;
+        }
+    }
+
+    fclose(inputMessageFilePtr);
+    fclose(outputImageFilePtr);
 }
