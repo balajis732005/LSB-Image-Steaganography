@@ -21,6 +21,11 @@ typedef enum{
     FAILURE
 } Status;
 
+typedef struct _StatusResult{
+    Status status;
+    char *statusMessage;
+} StatusResult;
+
 #define MAGIC_STRING "#E#"
 
 #endif

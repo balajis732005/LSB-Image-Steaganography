@@ -4,10 +4,10 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include <stdint.h>
 #include "data.h"
 
 typedef struct _InputMessageData{
-    char magicString[3];
     int messageFileNameLength;
     char *messageFileName;
     int messageFileExtensionLength;
@@ -15,6 +15,17 @@ typedef struct _InputMessageData{
     long int messageFileSize;
 } InputMessageData;
 
-Status getInputMessageData(char *, InputMessageData *);
+typedef struct _ImageData{
+    char *imageFileName;
+    long int imageFileSize;
+    int pixelStartByte;
+    int imageFileHeaderInfoSize;
+    int bitmapWidth;
+    int bitmapHeight;
+    int bitsPerPixel;
+} ImageData;
+
+StatusResult *getInputMessageData(char *, InputMessageData *);
+StatusResult *getImageData(char *, ImageData *);
 
 #endif
