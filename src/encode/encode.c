@@ -46,7 +46,7 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
     
     long int noOfBytesInImage = (imageData->bitmapWidth) * (imageData->bitmapHeight) * 3;
 
-    //printf("%ld - %ld\n", bytesNeededToEncode, noOfBytesInImage);
+    printf("%ld\n", bytesNeededToEncode);
 
     if(bytesNeededToEncode > noOfBytesInImage){
         encodeResult->encodeStatus = ENCODE_FAILURE;
@@ -55,8 +55,24 @@ EncodeResult* performEncode(EncodeInputData *encodeInputData){
         return encodeResult;
     }
 
+    char *encodedImageFilePath = (char *)malloc(101);
+    snprintf(
+        encodedImageFilePath,
+        101,
+        "output/%s_encoded.%s",
+        imageData->imageFileName,
+        "bmp"
+    );
+
+    printf("%s\n", encodedImageFilePath);
+
+    copyImageFile(encodeInputData->imageFilePath, encodedImageFilePath);
+
     int currentByteForEncode = imageData->pixelStartByte;
 
+    printf("%d\n", currentByteForEncode);
+
+    encodeInputFileDetails(encodedImageFilePath, inputMessageData, &currentByteForEncode);
 
     encodeResult->encodeStatus = ENCODE_SUCCESS;
     encodeResult->encodeResultMessage = NULL;
@@ -114,6 +130,40 @@ StatusResult *getInputMessageData(char *inputMessageFilePath, InputMessageData *
     inputMessageData->messageFileSize = ftell(inputMessageFilePtr);
 
     fclose(inputMessageFilePtr);
+
+    statusResult->status = SUCCESS;
+    return statusResult;
+}
+
+StatusResult *copyImageFile(char *inputImageFilePath, char *outputImageFilePath){
+
+    StatusResult *statusResult = (StatusResult *)malloc(sizeof(StatusResult));
+    statusResult->statusMessage = NULL;
+
+    FILE *inputImagePtr = fopen(inputImageFilePath, "rb");
+    if(inputImagePtr == NULL){
+        statusResult->status = FAILURE;
+        statusResult->statusMessage = "[ERROR] Input Image File Not Found!";
+        return statusResult;
+    }
+
+    FILE *outputImagePtr = fopen(outputImageFilePath, "wb");
+    if(outputImagePtr == NULL){
+        statusResult->status = FAILURE;
+        statusResult->statusMessage = "[ERROR] Output Image File Not Found!";
+        fclose(inputImagePtr);
+        return statusResult;
+    }
+
+    unsigned char dataBuffer[4096];
+    size_t byteRead;
+
+    while((byteRead = fread(dataBuffer, 1, sizeof(dataBuffer), inputImagePtr)) > 0){
+        fwrite(dataBuffer, 1, byteRead, outputImagePtr);
+    }
+
+    fclose(inputImagePtr);
+    fclose(outputImagePtr);
 
     statusResult->status = SUCCESS;
     return statusResult;
@@ -250,45 +300,75 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
     return statusResult;
 }
 
-void encode32Bits(FILE *imageFilePtr, int *startByte, int *dataToEncode){
+void encodeIntegralData(FILE *outputImageFilePtr, int startByte, const int dataToEncode){
 
     unsigned char currentByte;
+
+    fseek(outputImageFilePtr, startByte, SEEK_SET);
 
     for(int b = 31; b >= 0; b--){
-        unsigned char encodeBit = (*dataToEncode >> b) & 1;
+        unsigned char encodeBit = (dataToEncode >> b) & 1;
 
-        fread(&currentByte, 1, 1, imageFilePtr);
+        fread(&currentByte, 1, 1, outputImageFilePtr);
 
         currentByte = (currentByte & 0xFE) | encodeBit;
 
-        fseek(imageFilePtr, -1, SEEK_CUR);
+        fseek(outputImageFilePtr, -1, SEEK_CUR);
 
-        fwrite(&currentByte, 1, 1, imageFilePtr);
-
-        (*startByte)++;
+        fwrite(&currentByte, 1, 1, outputImageFilePtr);
     }
 }
 
-void encodeCustomBits(FILE *imageFilePtr, int *startByte, int noOfBitsToEncode,char *dataToEncode){
+void encodeStringData(FILE *outputImageFilePtr, int startByte, const char *dataToEncode){
 
     unsigned char currentByte;
 
-    for(int b = noOfBitsToEncode - 1; b >= 0; b--){
-        unsigned char encodeBit = (*dataToEncode >> b) & 1;
+    fseek(outputImageFilePtr, startByte, SEEK_SET);
 
-        fread(&currentByte, 1, 1, imageFilePtr);
+    while(*dataToEncode)
+    {
+        unsigned char currentChar =
+                (unsigned char)*dataToEncode;
 
-        currentByte = (currentByte & 0xFE) | encodeBit;
+        for(int b = 7; b >= 0; b--)
+        {
+            unsigned char encodeBit =
+                    (currentChar >> b) & 1;
 
-        fseek(imageFilePtr, -1, SEEK_CUR);
+            fread(&currentByte, 1, 1, outputImageFilePtr);
 
-        fwrite(&currentByte, 1, 1, imageFilePtr);
+            currentByte =
+                    (currentByte & 0xFE) | encodeBit;
 
-        (*startByte)++;
+            fseek(outputImageFilePtr, -1, SEEK_CUR);
+
+            fwrite(&currentByte, 1, 1, outputImageFilePtr);
+        }
+
+        dataToEncode++;
     }
-
 }
 
-void encodeInputFileDetails(char *imageFilePath, InputMessageData *inputMessageData){
-    FILE *imageFilePtr = fopen(imageFilePath, "rb+");
+void encodeInputFileDetails(char *outputImageFilePath, InputMessageData *inputMessageData, int *byteToEncode){
+    FILE *outputImageFilePtr = fopen(outputImageFilePath, "rb+");
+
+    // Encode Magic String
+    encodeStringData(outputImageFilePtr, *byteToEncode, MAGIC_STRING);
+    (*byteToEncode) += (strlen(MAGIC_STRING) * 8);
+
+    // Encode Input File Name Size
+    encodeIntegralData(outputImageFilePtr, *byteToEncode, inputMessageData->messageFileNameLength);
+    (*byteToEncode) += 32;
+
+    // Encode Input File Name
+    encodeStringData(outputImageFilePtr, *byteToEncode, inputMessageData->messageFileName);
+    (*byteToEncode) += (inputMessageData->messageFileNameLength * 8);
+
+    // Encode Input File Extension Size
+    encodeIntegralData(outputImageFilePtr, *byteToEncode, inputMessageData->messageFileExtensionLength);
+    (*byteToEncode) += 32;
+
+    // Encode Input File Extension
+    encodeStringData(outputImageFilePtr, *byteToEncode, inputMessageData->messageFileExtension);
+    (*byteToEncode) += (inputMessageData->messageFileExtensionLength * 8);
 }
