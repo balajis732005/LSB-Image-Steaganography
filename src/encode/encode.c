@@ -2,45 +2,70 @@
 
 StatusResult *performEncode(EncodeInputData *encodeInputData){
     StatusResult *encodeResult = (StatusResult *)malloc(sizeof(StatusResult));
+
     InputMessageData *inputMessageData = (InputMessageData *)malloc(sizeof(InputMessageData));
+
     ImageData *imageData = (ImageData *)malloc(sizeof(ImageData));
 
-    StatusResult *inputDataExtractionStatus;
-    inputDataExtractionStatus = getInputMessageData(encodeInputData->inputMessageFilePath, inputMessageData);
+    StatusResult *inputDataExtractionStatus = getInputMessageData(encodeInputData->inputMessageFilePath, inputMessageData);
 
-    if(inputDataExtractionStatus->status == FAILURE){
+    if (inputDataExtractionStatus->status == FAILURE){
         encodeResult->status = FAILURE;
-        encodeResult->statusMessage = (char *)malloc(51);
-        encodeResult->statusMessage = inputDataExtractionStatus->statusMessage;
+        encodeResult->statusMessage =
+                inputDataExtractionStatus->statusMessage;
+
+        freeStatusResult(inputDataExtractionStatus);
+        free(inputMessageData);
+        free(imageData);
+
         return encodeResult;
     }
 
-    StatusResult *imageDataExtractionStatus;
-    imageDataExtractionStatus = getImageData(encodeInputData->imageFilePath, imageData);
-        
-    if(imageDataExtractionStatus->status == FAILURE){
+    freeStatusResult(inputDataExtractionStatus);
+
+    StatusResult *imageDataExtractionStatus = getImageData(encodeInputData->imageFilePath, imageData);
+
+    if (imageDataExtractionStatus->status == FAILURE){
         encodeResult->status = FAILURE;
-        encodeResult->statusMessage = (char *)malloc(51);
-        encodeResult->statusMessage = imageDataExtractionStatus->statusMessage;
+        encodeResult->statusMessage =
+                imageDataExtractionStatus->statusMessage;
+
+        freeStatusResult(imageDataExtractionStatus);
+
+        freeInputMessageData(inputMessageData);
+        freeImageData(imageData);
+
         return encodeResult;
     }
 
-    long int bytesNeededToEncode = 
-                              (strlen(MAGIC_STRING) * 8) + 
-                              32 + (inputMessageData->messageFileNameLength * 8) + 
-                              32 + (inputMessageData->messageFileExtensionLength * 8) + 
-                              32 + (inputMessageData->messageFileSize * 8);
-    
-    long int noOfBytesInImage = (imageData->bitmapWidth) * (imageData->bitmapHeight) * 3;
+    freeStatusResult(imageDataExtractionStatus);
 
-    if(bytesNeededToEncode > noOfBytesInImage){
+    long int bytesNeededToEncode =
+            (strlen(MAGIC_STRING) * 8) +
+            32 +
+            (inputMessageData->messageFileNameLength * 8) +
+            32 +
+            (inputMessageData->messageFileExtensionLength * 8) +
+            32 +
+            (inputMessageData->messageFileSize * 8);
+
+    long int noOfBytesInImage =
+            imageData->bitmapWidth *
+            imageData->bitmapHeight *
+            3;
+
+    if (bytesNeededToEncode > noOfBytesInImage){
         encodeResult->status = FAILURE;
-        encodeResult->statusMessage = (char *)malloc(51);
         encodeResult->statusMessage = "[ERROR] BMP File Capacity is not sufficient to encode input data!";
+
+        freeInputMessageData(inputMessageData);
+        freeImageData(imageData);
+
         return encodeResult;
     }
 
     char *encodedImageFilePath = (char *)malloc(101);
+
     snprintf(
         encodedImageFilePath,
         101,
@@ -49,21 +74,40 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
         "bmp"
     );
 
-    copyImageFile(encodeInputData->imageFilePath, encodedImageFilePath);
+    StatusResult *copyStatus = copyImageFile(encodeInputData->imageFilePath, encodedImageFilePath);
+
+    if (copyStatus->status == FAILURE){
+        encodeResult->status = FAILURE;
+        encodeResult->statusMessage = copyStatus->statusMessage;
+
+        freeStatusResult(copyStatus);
+        free(encodedImageFilePath);
+        freeInputMessageData(inputMessageData);
+        freeImageData(imageData);
+
+        return encodeResult;
+    }
+
+    freeStatusResult(copyStatus);
 
     int currentByteForEncode = imageData->pixelStartByte;
 
     encodeInputFileDetails(encodedImageFilePath, inputMessageData, &currentByteForEncode);
 
     encodeInputFileContent(
-        inputMessageData->messageFileSize, 
-        encodeInputData->inputMessageFilePath, 
-        encodedImageFilePath, 
+        inputMessageData->messageFileSize,
+        encodeInputData->inputMessageFilePath,
+        encodedImageFilePath,
         &currentByteForEncode
     );
 
+    free(encodedImageFilePath);
+    freeInputMessageData(inputMessageData);
+    freeImageData(imageData);
+
     encodeResult->status = SUCCESS;
     encodeResult->statusMessage = NULL;
+
     return encodeResult;
 }
 
@@ -112,7 +156,7 @@ StatusResult *getInputMessageData(char *inputMessageFilePath, InputMessageData *
 
     inputMessageData->messageFileExtensionLength = strlen(fileEntension);
 
-    inputMessageData->messageFileExtension = malloc(inputMessageData->messageFileExtensionLength + 1);
+    inputMessageData->messageFileExtension = (char *)malloc(inputMessageData->messageFileExtensionLength + 1);
 
     strcpy(inputMessageData->messageFileExtension, fileEntension);
 
@@ -401,4 +445,25 @@ void encodeInputFileContent(int inputMessageFileSize, char *inputMessageFilePath
 
     fclose(inputMessageFilePtr);
     fclose(outputImageFilePtr);
+}
+
+static void freeStatusResult(StatusResult *result){
+    if (result){
+        free(result);
+    }
+}
+
+static void freeInputMessageData(InputMessageData *data){
+    if (data){
+        free(data->messageFileName);
+        free(data->messageFileExtension);
+        free(data);
+    }
+}
+
+static void freeImageData(ImageData *data){
+    if (data){
+        free(data->imageFileName);
+        free(data);
+    }
 }

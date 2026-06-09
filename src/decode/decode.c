@@ -1,26 +1,33 @@
 #include "decode.h"
 
 StatusResult *performDecode(char *inputEncodedImageFilePath){
+
     StatusResult *decodeResult = (StatusResult *)malloc(sizeof(StatusResult));
 
     ImageData *encodedImageData = (ImageData *)malloc(sizeof(ImageData));
 
-    StatusResult *imageDataExtractionStatus;
-    imageDataExtractionStatus = getImageData(inputEncodedImageFilePath, encodedImageData);
+    StatusResult *imageDataExtractionStatus = getImageData(inputEncodedImageFilePath, encodedImageData);
 
     if(imageDataExtractionStatus->status == FAILURE){
         decodeResult->status = FAILURE;
-        decodeResult->statusMessage = (char *)malloc(51);
         decodeResult->statusMessage = imageDataExtractionStatus->statusMessage;
+
+        freeStatusResult(imageDataExtractionStatus);
+        free(encodedImageData);
+
         return decodeResult;
     }
+
+    freeStatusResult(imageDataExtractionStatus);
 
     FILE *encodedImagePtr = fopen(inputEncodedImageFilePath, "rb");
 
     if(encodedImagePtr == NULL){
         decodeResult->status = FAILURE;
-        decodeResult->statusMessage = (char *)malloc(51);
         decodeResult->statusMessage = "[ERROR] Input Encoded Image File Not Found!";
+
+        freeImageDataDecode(encodedImageData);
+
         return decodeResult;
     }
 
@@ -28,54 +35,67 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
 
     int currentByteToDecode = encodedImageData->pixelStartByte;
 
-    // Decode Magic String
     outputDecodedData->decodedMagicString = (char *)malloc(strlen(MAGIC_STRING) + 1);
 
-    decodeStringData(encodedImagePtr, currentByteToDecode, 3, outputDecodedData->decodedMagicString);
+    decodeStringData(
+        encodedImagePtr,
+        currentByteToDecode,
+        3,
+        outputDecodedData->decodedMagicString
+    );
     currentByteToDecode += 24;
 
     if(strcmp(outputDecodedData->decodedMagicString, MAGIC_STRING) != 0){
         decodeResult->status = FAILURE;
-        decodeResult->statusMessage = (char *)malloc(51);
-        decodeResult->statusMessage = "[ERROR] Input Encoded Image File is Not Encoded!";
+        decodeResult->statusMessage =
+                "[ERROR] Input Encoded Image File is Not Encoded!";
+
+        fclose(encodedImagePtr);
+
+        freeDecodedData(outputDecodedData);
+        freeImageDataDecode(encodedImageData);
+
         return decodeResult;
     }
 
-    // Decode Message File Name Length
     outputDecodedData->decodedMessageFileNameLength = decodeIntegralData(encodedImagePtr, currentByteToDecode);
     currentByteToDecode += 32;
 
-    // Decode Message File Name
     outputDecodedData->decodedMessageFileName = (char *)malloc(outputDecodedData->decodedMessageFileNameLength + 1);
 
     decodeStringData(
-        encodedImagePtr, 
-        currentByteToDecode, 
-        outputDecodedData->decodedMessageFileNameLength, 
+        encodedImagePtr,
+        currentByteToDecode,
+        outputDecodedData->decodedMessageFileNameLength,
         outputDecodedData->decodedMessageFileName
     );
     currentByteToDecode += (outputDecodedData->decodedMessageFileNameLength * 8);
 
-    // Decode Message File Extension Length
-    outputDecodedData->decodedMessageFileExtensionLength = decodeIntegralData(encodedImagePtr, currentByteToDecode);
+    outputDecodedData->decodedMessageFileExtensionLength = decodeIntegralData(
+        encodedImagePtr,
+        currentByteToDecode
+    );
     currentByteToDecode += 32;
 
-    // Decode Message EFile xtension
     outputDecodedData->decodedMessageFileExtension = (char *)malloc(outputDecodedData->decodedMessageFileExtensionLength + 1);
 
     decodeStringData(
-        encodedImagePtr, 
-        currentByteToDecode, 
-        outputDecodedData->decodedMessageFileExtensionLength, 
+        encodedImagePtr,
+        currentByteToDecode,
+        outputDecodedData->decodedMessageFileExtensionLength,
         outputDecodedData->decodedMessageFileExtension
     );
     currentByteToDecode += (outputDecodedData->decodedMessageFileExtensionLength * 8);
 
-    // Decode Message File Size
-    outputDecodedData->decodedMessageFileSize = decodeIntegralData(encodedImagePtr, currentByteToDecode);
+    outputDecodedData->decodedMessageFileSize =
+        decodeIntegralData(
+        encodedImagePtr,
+        currentByteToDecode
+    );
     currentByteToDecode += 32;
 
     outputDecodedData->decodedOutputMessageFilePath = (char *)malloc(101);
+
     snprintf(
         outputDecodedData->decodedOutputMessageFilePath,
         101,
@@ -87,9 +107,21 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
 
     FILE *outputDecodedMessagePtr = fopen(outputDecodedData->decodedOutputMessageFilePath, "wb");
 
+    if(outputDecodedMessagePtr == NULL){
+        decodeResult->status = FAILURE;
+        decodeResult->statusMessage = "[ERROR] Unable to create output file!";
+
+        fclose(encodedImagePtr);
+
+        freeDecodedData(outputDecodedData);
+        freeImageDataDecode(encodedImageData);
+
+        return decodeResult;
+    }
+
     decodeMessageAndWrite(
-        encodedImagePtr, 
-        outputDecodedMessagePtr, 
+        encodedImagePtr,
+        outputDecodedMessagePtr,
         currentByteToDecode,
         outputDecodedData->decodedMessageFileSize
     );
@@ -97,8 +129,12 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
     fclose(encodedImagePtr);
     fclose(outputDecodedMessagePtr);
 
+    freeDecodedData(outputDecodedData);
+    freeImageDataDecode(encodedImageData);
+
     decodeResult->status = SUCCESS;
     decodeResult->statusMessage = NULL;
+
     return decodeResult;
 }
 
@@ -152,4 +188,27 @@ void decodeMessageAndWrite(FILE *encodedImagePtr, FILE *decodedMessagePtr, int s
         fwrite(&currentCharData, 1, 1, decodedMessagePtr);
     }
 
+}
+
+static void freeStatusResult(StatusResult *result){
+    if(result){
+        free(result);
+    }
+}
+
+static void freeDecodedData(DecodedData *data){
+    if(data){
+        free(data->decodedMagicString);
+        free(data->decodedMessageFileName);
+        free(data->decodedMessageFileExtension);
+        free(data->decodedOutputMessageFilePath);
+        free(data);
+    }
+}
+
+static void freeImageDataDecode(ImageData *data){
+    if(data){
+        free(data->imageFileName);
+        free(data);
+    }
 }

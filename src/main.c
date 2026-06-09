@@ -1,43 +1,62 @@
 #include "main.h"
 
 int main(){
+
     char operationType;
     displayOperationMenu();
     scanf(" %c", &operationType);
 
     operationType = toupper(operationType);
 
-    if(operationType == 'E'){
+    if (operationType == 'E'){
+
         // Encode
-        EncodeInputData *encodeInputData = (EncodeInputData *)malloc(sizeof(EncodeInputData));
+        EncodeInputData *encodeInputData =
+            (EncodeInputData *)malloc(sizeof(EncodeInputData));
+
         getInputForEncode(encodeInputData);
 
-        StatusResult *encodeResult = (StatusResult *)malloc(sizeof(StatusResult));
-        encodeResult = performEncode(encodeInputData);
+        StatusResult *encodeResult = performEncode(encodeInputData);
 
-        if(encodeResult->status == SUCCESS){
+        if (encodeResult->status == SUCCESS)
+        {
             printf("\nENCODE SUCCESS!\n");
-        } else if(encodeResult->status == FAILURE) {
+        }
+        else if (encodeResult->status == FAILURE)
+        {
             printf("\nENCODE FAILURE!\n");
             printf("%s\n", encodeResult->statusMessage);
         }
+
+        free(encodeInputData->inputMessageFilePath);
+        free(encodeInputData->imageFilePath);
+        free(encodeInputData);
+        free(encodeResult);
     }
-    else if(operationType == 'D') {
+    else if (operationType == 'D'){
+
         char *inputEncodedImageFilePath = (char *)malloc(101);
+
         printf("Enter Encoded Image File Path: ");
         scanf(" %100[^\n]", inputEncodedImageFilePath);
-        
-        StatusResult *decodeResult = (StatusResult *)malloc(sizeof(StatusResult));
-        decodeResult = performDecode(inputEncodedImageFilePath);
 
-        if(decodeResult->status == SUCCESS){
+        StatusResult *decodeResult =
+            performDecode(inputEncodedImageFilePath);
+
+        if (decodeResult->status == SUCCESS)
+        {
             printf("\nDECODE SUCCESS!\n");
-        } else if(decodeResult->status == FAILURE) {
+        }
+        else if (decodeResult->status == FAILURE)
+        {
             printf("\nDECODE FAILURE!\n");
             printf("%s\n", decodeResult->statusMessage);
         }
-    } 
-    else {
+
+        free(inputEncodedImageFilePath);
+        free(decodeResult);
+    }
+    else{
         printf("\nEnter Valid option!\n");
     }
 
@@ -47,7 +66,7 @@ int main(){
 void displayOperationMenu(){
     printf("\nWelcome to LSB Image Steaganography!\n");
     printf("Enter the operation you want to perform: \n");
-    printf("1) ENCODE - \'E\'\n2) DECODE - \'D\'\n");
+    printf("1) ENCODE - 'E'\n2) DECODE - 'D'\n");
     printf("Enter your choice: ");
 }
 

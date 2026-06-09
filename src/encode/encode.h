@@ -22,5 +22,8 @@ void encodeIntegralData(FILE *, int, const int);
 void encodeStringData(FILE *, int, const char *);
 void encodeInputFileDetails(char *, InputMessageData *, int *);
 void encodeInputFileContent(int, char *,char *, int *);
+static void freeStatusResult(StatusResult *);
+static void freeInputMessageData(InputMessageData *);
+static void freeImageData(ImageData *);
 
 #endif

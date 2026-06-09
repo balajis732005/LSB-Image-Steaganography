@@ -21,5 +21,8 @@ int decodeIntegralData(FILE *, int);
 char decodeCharData(FILE *, int);
 void decodeStringData(FILE *, int, int, char *);
 void decodeMessageAndWrite(FILE *, FILE *, int, int);
+static void freeStatusResult(StatusResult *);
+static void freeDecodedData(DecodedData *);
+static void freeImageDataDecode(ImageData *);
 
 #endif
