@@ -79,8 +79,9 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
     snprintf(
         outputDecodedData->decodedOutputMessageFilePath,
         101,
-        "output/%s_decoded.%s",
+        "output/%s_decoded_%s.%s",
         outputDecodedData->decodedMessageFileName,
+        encodedImageData->imageFileName,
         outputDecodedData->decodedMessageFileExtension
     );
 
