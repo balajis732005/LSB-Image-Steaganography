@@ -1,6 +1,6 @@
 #include "encode.h"
 
-StatusResult* performEncode(EncodeInputData *encodeInputData){
+StatusResult *performEncode(EncodeInputData *encodeInputData){
     StatusResult *encodeResult = (StatusResult *)malloc(sizeof(StatusResult));
     InputMessageData *inputMessageData = (InputMessageData *)malloc(sizeof(InputMessageData));
     ImageData *imageData = (ImageData *)malloc(sizeof(ImageData));
