@@ -15,29 +15,15 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
         return encodeResult;
     }
 
-    // printf("\nFile Name Length: %d", inputMessageData->messageFileNameLength);
-    // printf("\nFile Name: %s", inputMessageData->messageFileName);
-    // printf("\nFile Extension length: %d", inputMessageData->messageFileExtensionLength);
-    // printf("\nFile Extension : %s", inputMessageData->messageFileExtension);
-    // printf("\nFile Size : %ld\n", inputMessageData->messageFileSize);
-
     StatusResult *imageDataExtractionStatus;
     imageDataExtractionStatus = getImageData(encodeInputData->imageFilePath, imageData);
-    
+        
     if(imageDataExtractionStatus->status == FAILURE){
         encodeResult->status = FAILURE;
         encodeResult->statusMessage = (char *)malloc(51);
         encodeResult->statusMessage = imageDataExtractionStatus->statusMessage;
         return encodeResult;
     }
-
-    // printf("FN : %s\n", imageData->imageFileName);
-    // printf("SIZE : %ld\n", imageData->imageFileSize);
-    // printf("PStart: %d\n", imageData->pixelStartByte);
-    // printf("HINFOSIZE : %d\n", imageData->imageFileHeaderInfoSize);
-    // printf("W : %d\n", imageData->bitmapWidth);
-    // printf("H : %d\n", imageData->bitmapHeight);
-    // printf("BPerPix : %d\n", imageData->bitsPerPixel);
 
     long int bytesNeededToEncode = 
                               (strlen(MAGIC_STRING) * 8) + 
@@ -46,8 +32,6 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
                               32 + (inputMessageData->messageFileSize * 8);
     
     long int noOfBytesInImage = (imageData->bitmapWidth) * (imageData->bitmapHeight) * 3;
-
-    printf("%ld\n", bytesNeededToEncode);
 
     if(bytesNeededToEncode > noOfBytesInImage){
         encodeResult->status = FAILURE;
@@ -65,25 +49,18 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
         "bmp"
     );
 
-    printf("%s\n", encodedImageFilePath);
-
     copyImageFile(encodeInputData->imageFilePath, encodedImageFilePath);
 
     int currentByteForEncode = imageData->pixelStartByte;
 
-    printf("%d\n", currentByteForEncode);
-
     encodeInputFileDetails(encodedImageFilePath, inputMessageData, &currentByteForEncode);
 
-    printf("STARTED ENCODING DATA\n");
     encodeInputFileContent(
         inputMessageData->messageFileSize, 
         encodeInputData->inputMessageFilePath, 
         encodedImageFilePath, 
         &currentByteForEncode
     );
-
-    printf("%d\n", currentByteForEncode);
 
     encodeResult->status = SUCCESS;
     encodeResult->statusMessage = NULL;
@@ -122,6 +99,8 @@ StatusResult *getInputMessageData(char *inputMessageFilePath, InputMessageData *
     inputMessageData->messageFileName = (char *)malloc(fileNameLength + 1);
     memcpy(inputMessageData->messageFileName, fileName, fileNameLength);
 
+    inputMessageData->messageFileName[fileNameLength] = '\0';
+
     inputMessageData->messageFileNameLength = (int)fileNameLength;
 
     // Input File Extension
@@ -131,8 +110,11 @@ StatusResult *getInputMessageData(char *inputMessageFilePath, InputMessageData *
         fileEntension++;
     }
 
-    inputMessageData->messageFileExtension = (char *)malloc(sizeof(fileEntension));
-    inputMessageData->messageFileExtension = fileEntension;
+    inputMessageData->messageFileExtensionLength = strlen(fileEntension);
+
+    inputMessageData->messageFileExtension = malloc(inputMessageData->messageFileExtensionLength + 1);
+
+    strcpy(inputMessageData->messageFileExtension, fileEntension);
 
     inputMessageData->messageFileExtensionLength = strlen(fileEntension);
 
@@ -225,6 +207,8 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
 
     imageData->imageFileName = (char *)malloc(fileNameLength + 1);
     memcpy(imageData->imageFileName, fileName, fileNameLength);
+
+    imageData->imageFileName[fileNameLength] = '\0';
 
     // Check 1: File Extension Check
     char *fileExtension = strrchr(fileName, '.');
