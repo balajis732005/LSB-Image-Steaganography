@@ -71,7 +71,30 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
     );
     currentByteToDecode += (outputDecodedData->decodedMessageFileExtensionLength * 8);
 
-    printf("%s\n", outputDecodedData->decodedMessageFileExtension);
+    // Decode Message File Size
+    outputDecodedData->decodedMessageFileSize = decodeIntegralData(encodedImagePtr, currentByteToDecode);
+    currentByteToDecode += 32;
+
+    outputDecodedData->decodedOutputMessageFilePath = (char *)malloc(101);
+    snprintf(
+        outputDecodedData->decodedOutputMessageFilePath,
+        101,
+        "output/%s_decoded.%s",
+        outputDecodedData->decodedMessageFileName,
+        outputDecodedData->decodedMessageFileExtension
+    );
+
+    FILE *outputDecodedMessagePtr = fopen(outputDecodedData->decodedOutputMessageFilePath, "wb");
+
+    decodeMessageAndWrite(
+        encodedImagePtr, 
+        outputDecodedMessagePtr, 
+        currentByteToDecode,
+        outputDecodedData->decodedMessageFileSize
+    );
+
+    fclose(encodedImagePtr);
+    fclose(outputDecodedMessagePtr);
 
     decodeResult->status = SUCCESS;
     decodeResult->statusMessage = NULL;
@@ -117,4 +140,15 @@ void decodeStringData(FILE *encodedImagePtr, int startByte, int stringLength, ch
     }
 
     decodedStringValue[stringLength] = '\0';
+}
+
+void decodeMessageAndWrite(FILE *encodedImagePtr, FILE *decodedMessagePtr, int startByte, int stringLength){
+
+    char currentCharData;
+
+    for(int b = 0; b < stringLength; b++){
+        currentCharData = decodeCharData(encodedImagePtr, startByte + (b * 8));
+        fwrite(&currentCharData, 1, 1, decodedMessagePtr);
+    }
+
 }

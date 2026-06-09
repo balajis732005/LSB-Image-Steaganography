@@ -20,5 +20,6 @@ StatusResult *getImageData(char *, ImageData *);
 int decodeIntegralData(FILE *, int);
 char decodeCharData(FILE *, int);
 void decodeStringData(FILE *, int, int, char *);
+void decodeMessageAndWrite(FILE *, FILE *, int, int);
 
 #endif

@@ -1,1 +1,2 @@
-I am an Embedded System Developer.
+I am an Embedded System Developer. 
+I used this file to test the message encoding and decoding.
