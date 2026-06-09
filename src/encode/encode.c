@@ -7,12 +7,12 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
 
     ImageData *imageData = (ImageData *)malloc(sizeof(ImageData));
 
+    // Get Input Message Details
     StatusResult *inputDataExtractionStatus = getInputMessageData(encodeInputData->inputMessageFilePath, inputMessageData);
 
     if (inputDataExtractionStatus->status == FAILURE){
         encodeResult->status = FAILURE;
-        encodeResult->statusMessage =
-                inputDataExtractionStatus->statusMessage;
+        encodeResult->statusMessage = inputDataExtractionStatus->statusMessage;
 
         freeStatusResult(inputDataExtractionStatus);
         free(inputMessageData);
@@ -23,12 +23,12 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
 
     freeStatusResult(inputDataExtractionStatus);
 
+    // Get Input Image Details
     StatusResult *imageDataExtractionStatus = getImageData(encodeInputData->imageFilePath, imageData);
 
     if (imageDataExtractionStatus->status == FAILURE){
         encodeResult->status = FAILURE;
-        encodeResult->statusMessage =
-                imageDataExtractionStatus->statusMessage;
+        encodeResult->statusMessage = imageDataExtractionStatus->statusMessage;
 
         freeStatusResult(imageDataExtractionStatus);
 
@@ -40,6 +40,7 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
 
     freeStatusResult(imageDataExtractionStatus);
 
+    // Calculate Bytes to Encode and Image Capacity
     long int bytesNeededToEncode =
             (strlen(MAGIC_STRING) * 8) +
             32 +
@@ -64,6 +65,7 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
         return encodeResult;
     }
 
+    // Output Encoded Image File Path
     char *encodedImageFilePath = (char *)malloc(101);
 
     snprintf(
@@ -74,6 +76,7 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
         "bmp"
     );
 
+    // Copy Input Image File to Output Image File
     StatusResult *copyStatus = copyImageFile(encodeInputData->imageFilePath, encodedImageFilePath);
 
     if (copyStatus->status == FAILURE){
@@ -90,10 +93,22 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
 
     freeStatusResult(copyStatus);
 
+    // byte to encode status storage
     int currentByteForEncode = imageData->pixelStartByte;
 
+    /*
+    Encode Input File Details (
+        Magic String,
+        Input Message File Name Length,
+        Input Message File Name,
+        Input Message File Extension Length,
+        Input Message File Extension,
+        Input Message File Size 
+    )
+    */
     encodeInputFileDetails(encodedImageFilePath, inputMessageData, &currentByteForEncode);
 
+    // Encode Input Message File Content
     encodeInputFileContent(
         inputMessageData->messageFileSize,
         encodeInputData->inputMessageFilePath,
@@ -124,6 +139,7 @@ StatusResult *getInputMessageData(char *inputMessageFilePath, InputMessageData *
     }
 
     // Input File Name
+
     char *fileName = strrchr(inputMessageFilePath, '/');
     if(fileName){
         fileName++;
@@ -233,6 +249,7 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
     }
 
     // Image File Name
+
     char *fileName = strrchr(imageFilePath, '/');
     if(fileName){
         fileName++;
@@ -255,6 +272,7 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
     imageData->imageFileName[fileNameLength] = '\0';
 
     // Check 1: File Extension Check
+
     char *fileExtension = strrchr(fileName, '.');
     if(fileExtension){
         fileExtension++;
@@ -267,6 +285,7 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
     }
 
     // Check 2: Header Minimum Size
+
     unsigned char header[54];
     if(fread(header, 1, 54, imageFilePtr) < 54){
         statusResult->status = FAILURE;
@@ -276,6 +295,7 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
     }
 
     // Check 3: File Signature
+
     if(header[0] != 'B' || header[1] != 'M'){
         statusResult->status = FAILURE;
         statusResult->statusMessage = "[ERROR] Image File Not in BMP Format, Signature of the file is not \'BM\'!";
@@ -284,22 +304,25 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
     }
 
     // Image File Size
+
     imageData->imageFileSize = (long int)readLittleEndian_32bits(&header[2]);
 
     // Pixels Start Byte
+
     imageData->pixelStartByte = (int)readLittleEndian_32bits(&header[10]);
 
     // Image Header Size
+
     imageData->imageFileHeaderInfoSize = (int)readLittleEndian_32bits(&header[14]);
 
     // Check 4: Hedaer Info Size is Standard or not
+
     if (imageData->imageFileHeaderInfoSize != 12 &&
         imageData->imageFileHeaderInfoSize != 40 &&
         imageData->imageFileHeaderInfoSize != 52 &&
         imageData->imageFileHeaderInfoSize != 56 &&
         imageData->imageFileHeaderInfoSize != 108 &&
-        imageData->imageFileHeaderInfoSize != 124)
-    {
+        imageData->imageFileHeaderInfoSize != 124) {
         statusResult->status = FAILURE;
         statusResult->statusMessage = "[ERROR] Image File Not in BMP Format, Size of Header Info is not Standard!";
         fclose(imageFilePtr);
@@ -317,6 +340,7 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
     }
 
     // Check 5: RGB Data
+
     if(imageData->bitsPerPixel != 24){
         statusResult->status = FAILURE;
         statusResult->statusMessage = "[ERROR] BMP File with only RGB 24 bits per pixel is only supported!";
@@ -325,6 +349,7 @@ StatusResult *getImageData(char *imageFilePath, ImageData *imageData){
     }
 
     // Check 6: Compression Status
+    
     if(imageData->imageFileHeaderInfoSize != 12){
         uint32_t compression = readLittleEndian_32bits(&header[30]);
         if (compression != 0){

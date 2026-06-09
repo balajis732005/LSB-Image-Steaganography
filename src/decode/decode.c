@@ -6,6 +6,7 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
 
     ImageData *encodedImageData = (ImageData *)malloc(sizeof(ImageData));
 
+    // Get Encoded Image File Details
     StatusResult *imageDataExtractionStatus = getImageData(inputEncodedImageFilePath, encodedImageData);
 
     if(imageDataExtractionStatus->status == FAILURE){
@@ -33,8 +34,10 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
 
     DecodedData *outputDecodedData = (DecodedData *)malloc(sizeof(DecodedData));
 
+    // byte to decode status storage
     int currentByteToDecode = encodedImageData->pixelStartByte;
 
+    // Decode Magic String
     outputDecodedData->decodedMagicString = (char *)malloc(strlen(MAGIC_STRING) + 1);
 
     decodeStringData(
@@ -45,6 +48,7 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
     );
     currentByteToDecode += 24;
 
+    // Check Magic String is Encoded or not
     if(strcmp(outputDecodedData->decodedMagicString, MAGIC_STRING) != 0){
         decodeResult->status = FAILURE;
         decodeResult->statusMessage =
@@ -58,9 +62,11 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
         return decodeResult;
     }
 
+    // Decode Message File Name Length
     outputDecodedData->decodedMessageFileNameLength = decodeIntegralData(encodedImagePtr, currentByteToDecode);
     currentByteToDecode += 32;
 
+    // Decode Message File Name
     outputDecodedData->decodedMessageFileName = (char *)malloc(outputDecodedData->decodedMessageFileNameLength + 1);
 
     decodeStringData(
@@ -71,12 +77,14 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
     );
     currentByteToDecode += (outputDecodedData->decodedMessageFileNameLength * 8);
 
+    // Decode Message File Extension Length
     outputDecodedData->decodedMessageFileExtensionLength = decodeIntegralData(
         encodedImagePtr,
         currentByteToDecode
     );
     currentByteToDecode += 32;
 
+    // Decode Message File Extension
     outputDecodedData->decodedMessageFileExtension = (char *)malloc(outputDecodedData->decodedMessageFileExtensionLength + 1);
 
     decodeStringData(
@@ -87,6 +95,7 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
     );
     currentByteToDecode += (outputDecodedData->decodedMessageFileExtensionLength * 8);
 
+    // Decode Message File Size
     outputDecodedData->decodedMessageFileSize =
         decodeIntegralData(
         encodedImagePtr,
@@ -94,6 +103,7 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
     );
     currentByteToDecode += 32;
 
+    // Output Decoded Message File
     outputDecodedData->decodedOutputMessageFilePath = (char *)malloc(101);
 
     snprintf(
@@ -119,6 +129,7 @@ StatusResult *performDecode(char *inputEncodedImageFilePath){
         return decodeResult;
     }
 
+    // Decode Message File Content and write in Output Decoded Message File
     decodeMessageAndWrite(
         encodedImagePtr,
         outputDecodedMessagePtr,
