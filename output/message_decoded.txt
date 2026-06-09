@@ -1,3 +1,0 @@
-I am an Embedded System Developer. 
-I used this file to test the message encoding and decoding.
-I am working as an Automotive Embedded Software Developer.
