@@ -15,16 +15,6 @@ typedef struct _InputMessageData{
     int messageFileSize;
 } InputMessageData;
 
-typedef struct _ImageData{
-    char *imageFileName;
-    long int imageFileSize;
-    int pixelStartByte;
-    int imageFileHeaderInfoSize;
-    int bitmapWidth;
-    int bitmapHeight;
-    int bitsPerPixel;
-} ImageData;
-
 StatusResult *getInputMessageData(char *, InputMessageData *);
 StatusResult *getImageData(char *, ImageData *);
 StatusResult *copyImageFile(char *, char *);

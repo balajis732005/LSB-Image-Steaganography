@@ -3,7 +3,22 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-#include <stdint.h>
+#include<string.h>
 #include "data.h"
+
+typedef struct _DecodedData{
+    char *decodedMagicString;
+    int decodedMessageFileNameLength;
+    char *decodedMessageFileName;
+    int decodedMessageFileExtensionLength;
+    char *decodedMessageFileExtension;
+    int decodedMessageFileSize;
+    char *decodedOutputMessageFilePath;
+} DecodedData;
+
+StatusResult *getImageData(char *, ImageData *);
+int decodeIntegralData(FILE *, int);
+char decodeCharData(FILE *, int);
+void decodeStringData(FILE *, int, int, char *);
 
 #endif

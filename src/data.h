@@ -16,6 +16,16 @@ typedef struct _StatusResult{
     char *statusMessage;
 } StatusResult;
 
+typedef struct _ImageData{
+    char *imageFileName;
+    long int imageFileSize;
+    int pixelStartByte;
+    int imageFileHeaderInfoSize;
+    int bitmapWidth;
+    int bitmapHeight;
+    int bitsPerPixel;
+} ImageData;
+
 #define MAGIC_STRING "#E#"
 
 #endif

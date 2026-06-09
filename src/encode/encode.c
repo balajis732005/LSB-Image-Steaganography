@@ -27,7 +27,7 @@ StatusResult *performEncode(EncodeInputData *encodeInputData){
     if(imageDataExtractionStatus->status == FAILURE){
         encodeResult->status = FAILURE;
         encodeResult->statusMessage = (char *)malloc(51);
-        encodeResult->statusMessage = inputDataExtractionStatus->statusMessage;
+        encodeResult->statusMessage = imageDataExtractionStatus->statusMessage;
         return encodeResult;
     }
 
