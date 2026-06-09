@@ -11,7 +11,7 @@ SRC = $(shell find src -name "*.c")
 OBJ = $(SRC:.c=.o)
 
 # Executable
-TARGET = lsbImageSteaganography.out
+TARGET = lsbImageSteganography.out
 
 # Default target
 all: $(TARGET)
