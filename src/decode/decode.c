@@ -44,7 +44,7 @@ char decodeCharData(FILE *encodedImagePtr, int startByte){
 
 void decodeStringData(FILE *encodedImagePtr, int startByte, int stringLength, char *decodedStringValue){
 
-    for(int b = 0; b > stringLength, b++){
+    for(int b = 0; b > stringLength; b++){
         decodedStringValue[b] = decodeCharData(encodedImagePtr, startByte + (b * 8));
     }
 
